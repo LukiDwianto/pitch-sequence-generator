@@ -1,207 +1,71 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pitch Sequence Generator</title>
-<style>
-:root{--bg:#0b1020;--card:#151c31;--text:#eef3ff;--muted:#9aa8c7;--accent:#6ea8fe;--green:#7ee787;--line:#283553}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
-.wrap{max-width:1150px;margin:auto;padding:24px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.pitch-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.pitch{display:flex;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;background:#0e1629}
-button,input,select{font:inherit}button{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:#07101e}.secondary{background:#243252;color:white}.danger{background:#44242b;color:#ffc1bd}
-input[type=number],input[type=text],select{width:100%;background:#0c1325;color:white;border:1px solid var(--line);border-radius:10px;padding:10px}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.checks{display:grid;gap:8px;margin:14px 0}.muted{color:var(--muted)}
-.groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.group{background:#0e1629;border:1px solid var(--line);border-radius:14px;padding:14px}.chips{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}.chip{font-size:12px;background:#1a2540;padding:5px 7px;border-radius:7px}
-.tabs{display:flex;gap:8px;margin-bottom:16px}.tab.active{background:var(--accent);color:#07101e}.panel{display:none}.panel.active{display:block}
-.session{text-align:center;min-height:65vh;display:grid;place-items:center}.big{font-size:clamp(38px,8vw,80px);font-weight:900;margin:16px 0 4px}.zone-text{font-size:clamp(30px,6vw,58px);font-weight:800;color:var(--green)}
-.zone-grid{width:min(330px,85vw);aspect-ratio:1;margin:20px auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.zone{display:grid;place-items:center;background:#111b31;border:1px solid var(--line);border-radius:10px;font-size:25px;font-weight:800}.zone.active{background:var(--accent);color:#07101e}.hidden{display:none!important}.ios-note{display:none;background:#2a2212;border:1px solid #665326;color:#ffe4a8;padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:14px}@supports (-webkit-touch-callout:none){.ios-note{display:block}}
-@media(max-width:800px){.grid,.form-grid{grid-template-columns:1fr}.pitch-list{grid-template-columns:1fr}}
-</style></head>
-<body><div class="wrap">
-<h1>Pitch Sequence Generator</h1><p class="muted">Generate kombinasi pitch, simpan grup, lalu jalankan sesi suara dengan tombol spasi.</p>
-<div id="runtimeStatus" class="ios-note">Memuat fungsi aplikasi…</div><div class="tabs"><button class="tab active" data-tab="generator">Generator</button><button class="tab secondary" data-tab="groups">Daftar Grup</button><button class="tab secondary" data-tab="session">Sesi</button></div>
-<section id="generator" class="panel active"><div class="grid">
-<div class="card"><h2>Jenis pitch</h2><div class="ios-note">Di iPhone, buka file ini melalui Safari agar tombol Generate, Tambah, suara, dan penyimpanan dapat bekerja.</div><div id="pitchList" class="pitch-list">
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="four-seam" checked><span>Four-Seam Fastball</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="two-seam" checked><span>Two-Seam Fastball</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="changeup" checked><span>Changeup</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="knuckleball" checked><span>Knuckleball</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="slider" checked><span>Slider</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="curveball"><span>Curveball</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="forkball"><span>Forkball</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="cutter"><span>Cutter</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="sinker"><span>Sinker</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="splitter"><span>Splitter</span></label>
-<label class="pitch"><input class="pitchCheck" type="checkbox" value="knuckle-curve"><span>Knuckle Curve</span></label>
-</div><div class="row" style="margin-top:12px"><input id="customPitch" type="text" placeholder="Tambah pitch lain..." style="flex:1"><button id="addPitch" class="secondary">Tambah</button></div></div>
-<div class="card"><h2>Pengaturan</h2><div class="form-grid"><div><label>Jumlah grup</label><input id="groupCount" type="number" min="1" max="200" value="30"></div><div><label>Pitch per grup</label><input id="pitchCount" type="number" min="2" max="100" value="10"></div></div>
-<div class="checks"><label><input id="balanced" type="checkbox" checked> Komposisi pitch seimbang</label><label><input id="avoidSamePitch" type="checkbox" checked> Jangan gunakan pitch yang sama secara berurutan</label><label><input id="exclude5" type="checkbox" checked> Jangan gunakan zona 5</label><label><input id="avoidRepeat" type="checkbox" checked> Jangan gunakan zona yang sama secara berurutan</label><label><input id="broadZones" type="checkbox" checked> Variasikan zona seluas mungkin</label></div>
-<div class="form-grid"><div><label>Gaya lokasi</label><select id="locationStyle"><option value="mixed">Campuran realistis + acak</option><option value="random">Benar-benar acak</option><option value="realistic">Lebih realistis</option></select></div><div><label>Bahasa suara</label><select id="voiceLang"><option value="id-ID">Indonesia</option><option value="en-US">English</option></select></div></div>
-<div class="row" style="margin-top:15px"><button id="generate" class="primary">Generate</button><button id="exportTxt" class="secondary">Export TXT</button></div></div></div></section>
-<section id="groups" class="panel"><div class="card"><div class="row" style="justify-content:space-between"><div><h2>Daftar grup</h2><p id="summary" class="muted">Belum ada grup.</p></div><button id="shuffleAgain" class="secondary">Acak ulang</button></div><div id="groupCards" class="groups"></div></div></section>
-<section id="session" class="panel"><div class="session"><div class="card" style="width:min(760px,100%)"><div id="sessionEmpty"><h2>Belum ada sesi aktif</h2><p class="muted">Generate grup lalu pilih Mulai Sesi.</p></div><div id="sessionContent" class="hidden"><div id="sessionGroup"></div><div id="sessionPitch" class="big"></div><div id="sessionZone" class="zone-text"></div><div id="sessionProgress" class="muted"></div><div id="zoneGrid" class="zone-grid"></div><div class="row" style="justify-content:center;margin-bottom:10px"><button id="prevGroup" class="secondary">⏮ Grup Sebelumnya</button><button id="nextGroup" class="secondary">Grup Selanjutnya ⏭</button></div><div class="row" style="justify-content:center"><button id="prevPitch" class="secondary">← Pitch Sebelumnya</button><button id="nextPitch" class="primary">Pitch Selanjutnya (Spasi)</button><button id="repeatVoice" class="secondary">Ulangi (R)</button><button id="exitSession" class="danger">Keluar</button></div><p class="muted">Spasi/→ pitch selanjutnya, ← pitch sebelumnya, R ulangi suara, Esc keluar.</p></div></div></div></section>
-</div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Pitch Sequence Generator</title>
+  <style>
+    :root{--bg:#f4f7fb;--card:#fff;--ink:#162033;--muted:#667085;--line:#dfe5ef;--primary:#175cd3;--primary-soft:#eaf2ff;--danger:#b42318;--danger-soft:#fff0ee;--success:#067647;--success-soft:#ecfdf3;--shadow:0 12px 34px rgba(16,24,40,.08);--radius:18px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(circle at top right,rgba(23,92,211,.08),transparent 33rem),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}.app-shell{width:min(1100px,100%);margin:0 auto;padding:20px 16px 52px}.app-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px}.eyebrow{margin:0 0 4px;color:var(--primary);font-weight:800;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase}h1,h2,h3,p{margin-top:0}h1{margin-bottom:6px;font-size:clamp(1.65rem,5vw,2.45rem);line-height:1.08}h2{margin-bottom:4px;font-size:1.25rem}.subtitle,.helper,.meta{color:var(--muted)}.subtitle{margin:0;line-height:1.5}.header-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.screen{display:none}.screen.active{display:block}.card{background:var(--card);border:1px solid rgba(223,229,239,.92);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}.section-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}.section-head p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.45}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:flex;flex-direction:column;gap:7px}.field label,.field-label{font-weight:750;font-size:.91rem}input[type="number"],input[type="text"]{width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:10px 12px;outline:none;transition:border-color .2s,box-shadow .2s}input:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(23,92,211,.12)}.segmented{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px;border-radius:14px;background:#f2f4f7}.segmented label{position:relative;display:flex;align-items:center;justify-content:center;min-height:42px;border-radius:10px;font-weight:750;cursor:pointer}.segmented input{position:absolute;opacity:0;pointer-events:none}.segmented label:has(input:checked){background:#fff;color:var(--primary);box-shadow:0 2px 10px rgba(16,24,40,.09)}.hidden{display:none!important}.zone-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:min(330px,100%);gap:8px}.zone-option{position:relative;aspect-ratio:1.12}.zone-option input{position:absolute;opacity:0;pointer-events:none}.zone-option span{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:13px;background:#fff;font-weight:850;font-size:1.05rem;user-select:none;cursor:pointer;transition:.18s ease}.zone-option input:checked+span{color:var(--primary);background:var(--primary-soft);border-color:#84adff;box-shadow:inset 0 0 0 1px #84adff}.category{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:12px;background:#fff}.category summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;cursor:pointer;font-weight:850;background:#fbfcfe}.category summary::-webkit-details-marker{display:none}.category summary::after{content:"⌄";font-size:1.1rem;transition:transform .2s ease}.category[open] summary::after{transform:rotate(180deg)}.pitch-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:12px;border-top:1px solid var(--line)}.pitch-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff;min-width:0}.pitch-title-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.pitch-toggle{display:flex;align-items:center;min-width:0;gap:9px;font-weight:850}.pitch-toggle span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pitch-toggle input{width:19px;height:19px;flex:none;accent-color:var(--primary)}.mini-btn{border:0;background:transparent;color:var(--primary);font-weight:800;padding:6px;border-radius:8px}.mini-btn:hover{background:var(--primary-soft)}.allowed-label{margin-bottom:8px;color:var(--muted);font-size:.8rem;font-weight:750}.mini-zones{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}.mini-zone{position:relative;aspect-ratio:1}.mini-zone input{position:absolute;opacity:0;pointer-events:none}.mini-zone span{display:flex;align-items:center;justify-content:center;height:100%;border-radius:7px;border:1px solid var(--line);color:#667085;font-size:.72rem;font-weight:800;cursor:pointer;user-select:none}.mini-zone input:checked+span{color:var(--primary);border-color:#84adff;background:var(--primary-soft)}.pitch-card.disabled{opacity:.58;background:#f8fafc}.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.btn{min-height:44px;border:1px solid transparent;border-radius:12px;padding:10px 15px;font-weight:850;transition:transform .15s ease,background .15s ease,opacity .15s ease}.btn:active{transform:translateY(1px)}.btn:disabled{opacity:.45;cursor:not-allowed}.btn-primary{background:var(--primary);color:#fff}.btn-secondary{background:#fff;color:var(--ink);border-color:var(--line)}.btn-soft{background:var(--primary-soft);color:var(--primary)}.error-box,.success-box{display:none;margin-bottom:14px;padding:13px 14px;border-radius:12px;font-weight:700;line-height:1.45}.error-box.show{display:block;color:var(--danger);background:var(--danger-soft);border:1px solid #fecdca}.success-box.show{display:block;color:var(--success);background:var(--success-soft);border:1px solid #abefc6}.custom-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}.session-card{text-align:center;padding:24px}.session-meta{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:18px}.chip{border-radius:999px;background:#f2f4f7;padding:7px 11px;font-weight:800;font-size:.85rem}.pitch-display{margin:6px 0 18px;font-size:clamp(2rem,10vw,4.4rem);line-height:1;letter-spacing:-.035em}.zone-number{display:inline-flex;min-width:68px;min-height:68px;align-items:center;justify-content:center;border-radius:18px;background:var(--primary);color:#fff;font-size:2.15rem;font-weight:950;box-shadow:0 11px 24px rgba(23,92,211,.25);margin-bottom:16px}.session-zone{width:min(350px,100%);margin:0 auto 22px;display:grid;grid-template-columns:repeat(3,1fr);border:3px solid #344054;background:#344054;gap:3px}.session-zone-cell{aspect-ratio:1.18;background:#fff;display:grid;place-items:center;color:#98a2b3;font-weight:800;font-size:.8rem;position:relative}.session-zone-cell.active{background:var(--primary-soft);color:var(--primary)}.session-zone-cell.active::after{content:"";width:34%;aspect-ratio:1;border-radius:50%;background:var(--primary);box-shadow:0 0 0 7px rgba(23,92,211,.13)}.progress-track{height:9px;overflow:hidden;border-radius:999px;background:#eaecf0;margin:0 auto 8px;width:min(420px,100%)}.progress-bar{height:100%;width:0;background:var(--primary);border-radius:inherit;transition:width .2s ease}.nav-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px}.result-list{display:grid;gap:14px}.result-card{border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff}.result-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.sequence{display:grid;gap:7px;margin-bottom:14px}.sequence-item{display:grid;grid-template-columns:38px 1fr 48px;gap:8px;align-items:center;padding:9px 10px;background:#f8fafc;border-radius:10px}.sequence-index{color:var(--muted);font-size:.82rem;font-weight:750}.sequence-pitch{font-weight:850}.sequence-zone{justify-self:end;width:36px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-weight:900}.footer-note{text-align:center;color:var(--muted);margin-top:22px;font-size:.82rem}.voice-toggle{display:inline-flex;align-items:center;gap:8px;font-weight:750}.voice-toggle input{width:20px;height:20px;accent-color:var(--primary)}
+    @media(max-width:760px){.app-shell{padding:16px 12px 40px}.app-header{flex-direction:column}.header-actions{width:100%;justify-content:flex-start}.card{padding:16px;border-radius:16px}.grid,.pitch-list{grid-template-columns:1fr}.pitch-list{padding:10px}.section-head{flex-direction:column}.custom-row{grid-template-columns:1fr}.mini-zones{grid-template-columns:repeat(9,minmax(28px,1fr));overflow-x:auto}.session-card{padding:18px 14px}}@media(max-width:420px){.actions>.btn{flex:1 1 100%}.nav-grid{grid-template-columns:1fr 1fr}.nav-grid .btn{padding-inline:8px}}
+  </style>
+</head>
+<body>
+<main class="app-shell">
+<header class="app-header"><div><p class="eyebrow">Bullpen Practice</p><h1>Pitch Sequence Generator</h1><p class="subtitle">Atur pitch dan zona yang diperbolehkan, lalu jalankan sesi per batter.</p></div><div class="header-actions"><button class="btn btn-secondary" id="setupNavBtn" type="button">Setup</button><button class="btn btn-secondary" id="resultNavBtn" type="button">Hasil</button></div></header>
+<section id="setupScreen" class="screen active"><div id="setupError" class="error-box"></div><div id="setupSuccess" class="success-box"></div>
+<article class="card"><div class="section-head"><div><h2>Pengaturan sesi</h2><p>Tentukan jumlah batter dan banyak pitch untuk setiap batter.</p></div></div><div class="grid"><div class="field"><label for="batterCount">Jumlah batter</label><input id="batterCount" type="number" min="1" max="50" value="9"></div><div class="field"><span class="field-label">Mode jumlah pitch</span><div class="segmented"><label><input type="radio" name="pitchMode" value="fixed" checked>Fixed</label><label><input type="radio" name="pitchMode" value="random">Random</label></div></div><div id="fixedPitchField" class="field"><label for="fixedPitchCount">Pitch per batter</label><input id="fixedPitchCount" type="number" min="1" max="30" value="5"></div><div id="randomPitchFields" class="grid hidden"><div class="field"><label for="randomPitchMin">Minimum</label><input id="randomPitchMin" type="number" min="1" max="30" value="4"></div><div class="field"><label for="randomPitchMax">Maksimum</label><input id="randomPitchMax" type="number" min="1" max="30" value="6"></div></div></div></article>
+<article class="card"><div class="section-head"><div><h2>Global zone</h2><p>Generator hanya menggunakan zona yang dicentang di sini.</p></div></div><div id="globalZones" class="zone-grid"></div></article>
+<article class="card"><div class="section-head"><div><h2>Pitch library</h2><p>Setiap pitch memiliki zona bawaan. Curveball tidak menggunakan zona 1, 2, atau 3 secara default.</p></div><button id="resetAllPitchesBtn" class="btn btn-secondary" type="button">Reset default</button></div><div id="pitchLibrary"></div></article>
+<article class="card"><div class="section-head"><div><h2>Tambah custom pitch</h2><p>Custom pitch baru memakai semua zona sebagai default dan dapat diedit.</p></div></div><div class="custom-row"><div class="field"><label for="customPitchName">Nama pitch</label><input id="customPitchName" type="text" maxlength="30" placeholder="Contoh: Palmball"></div><button id="addCustomPitchBtn" class="btn btn-soft" type="button">Tambah pitch</button></div></article>
+<article class="card"><div class="actions"><label class="voice-toggle"><input id="voiceEnabled" type="checkbox" checked>Voice announcement</label><button id="generateBtn" class="btn btn-primary" type="button">Generate Session</button></div></article></section>
+<section id="sessionScreen" class="screen"><article class="card session-card"><div class="session-meta"><span id="batterMeta" class="chip">Batter 1 / 1</span><span id="pitchMeta" class="chip">Pitch 1 / 1</span></div><p class="eyebrow">Current Pitch</p><h2 id="sessionPitchName" class="pitch-display">Four-Seam</h2><div id="sessionZoneNumber" class="zone-number">1</div><div id="sessionZoneGrid" class="session-zone"></div><div class="progress-track"><div id="sessionProgress" class="progress-bar"></div></div><p id="progressLabel" class="meta">0%</p><div class="nav-grid"><button id="prevPitchBtn" class="btn btn-secondary" type="button">← Pitch</button><button id="nextPitchBtn" class="btn btn-primary" type="button">Pitch →</button><button id="prevBatterBtn" class="btn btn-secondary" type="button">← Batter</button><button id="nextBatterBtn" class="btn btn-secondary" type="button">Batter →</button></div><div class="actions" style="justify-content:center;margin-top:14px"><button id="speakBtn" class="btn btn-soft" type="button">Ulangi suara</button><button id="finishSessionBtn" class="btn btn-secondary" type="button">Lihat hasil</button></div></article></section>
+<section id="resultScreen" class="screen"><div id="resultError" class="error-box"></div><article class="card"><div class="section-head"><div><h2>Hasil sequence</h2><p>Regenerate hanya mengubah batter yang dipilih.</p></div><div class="actions"><button id="restartSessionBtn" class="btn btn-soft" type="button">Mulai sesi</button><button id="regenerateAllBtn" class="btn btn-secondary" type="button">Generate ulang semua</button></div></div><div id="resultList" class="result-list"></div></article></section><p class="footer-note">Semua konfigurasi disimpan otomatis di perangkat ini.</p>
+</main>
 <script>
-const DEFAULT=[['four-seam','Four-Seam Fastball'],['two-seam','Two-Seam Fastball'],['changeup','Changeup'],['knuckleball','Knuckleball'],['slider','Slider'],['curveball','Curveball'],['forkball','Forkball'],['cutter','Cutter'],['sinker','Sinker'],['splitter','Splitter'],['knuckle-curve','Knuckle Curve']].map(x=>({id:x[0],name:x[1]}));
-const pref={'four-seam':[1,2,3,4,6,8,7,9],'two-seam':[4,6,7,9,2,8,1,3],changeup:[7,8,9,4,6,2,1,3],knuckleball:[1,2,3,4,6,7,8,9],slider:[3,6,9,7,8,1,4,2],curveball:[7,8,9,6,4,3,2,1],forkball:[7,8,9,4,6,2,1,3],cutter:[1,3,4,6,2,8,7,9],sinker:[4,6,7,8,9,2,1,3],splitter:[7,8,9,4,6,2,1,3],'knuckle-curve':[7,8,9,3,6,4,2,1]};
-const memoryStore={};
-function safeGet(key,fallback){
-  try{
-    const value=window.localStorage.getItem(key);
-    return value===null?fallback:value;
-  }catch(error){
-    return Object.prototype.hasOwnProperty.call(memoryStore,key)?memoryStore[key]:fallback;
-  }
-}
-function safeSet(key,value){
-  memoryStore[key]=value;
-  try{window.localStorage.setItem(key,value)}catch(error){}
-}
-function safeParse(value,fallback){
-  try{return JSON.parse(value)}catch(error){return fallback}
-}
-
-let custom=safeParse(safeGet('customPitches','[]'),[]);
-let groups=safeParse(safeGet('pitchGroups','[]'),[]);
-let session={g:null,i:0};
-
-const $=x=>document.getElementById(x);
-const rnd=n=>Math.floor(Math.random()*n);
-const shuffle=a=>{a=[...a];for(let i=a.length-1;i;i--){let j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
-
-function all(){return [...DEFAULT,...custom]}
-function save(){
-  safeSet('customPitches',JSON.stringify(custom));
-  safeSet('pitchGroups',JSON.stringify(groups));
-}
-function tab(id){
-  document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===id));
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===id));
-}
-document.querySelectorAll('.tab').forEach(button=>{
-  button.addEventListener('click',()=>tab(button.dataset.tab));
-});
-function renderPitch(){const selected=new Set([...document.querySelectorAll('.pitchCheck:checked')].map(x=>x.value));$('pitchList').innerHTML=all().map((p,i)=>`<label class="pitch"><input class="pitchCheck" type="checkbox" value="${p.id}" ${(selected.size?selected.has(p.id):i<5)?'checked':''}><span>${p.name}</span>${p.custom?`<button type="button" class="danger remove" data-id="${p.id}" style="margin-left:auto;padding:3px 7px">×</button>`:''}</label>`).join('');document.querySelectorAll('.remove').forEach(b=>b.onclick=e=>{e.preventDefault();custom=custom.filter(p=>p.id!==b.dataset.id);save();renderPitch()})}
-$('addPitch').onclick=()=>{let name=$('customPitch').value.trim();if(!name)return;custom.push({id:'custom-'+Date.now(),name,custom:true});$('customPitch').value='';save();renderPitch()};
-function chosen(){let ids=[...document.querySelectorAll('.pitchCheck:checked')].map(x=>x.value);return all().filter(p=>ids.includes(p.id))}
-function pitchOrder(sel,count,balanced,avoidSamePitch){
-  for(let attempt=0;attempt<300;attempt++){
-    let a=[];
-    if(balanced){
-      while(a.length<count)a.push(...shuffle(sel));
-      a=shuffle(a.slice(0,count));
-    }else{
-      a=Array.from({length:count},()=>sel[rnd(sel.length)]);
-    }
-    if(!avoidSamePitch||a.every((p,i)=>i===0||p.id!==a[i-1].id))return a;
-  }
-  const out=[];
-  for(let i=0;i<count;i++){
-    const choices=sel.filter(p=>!out.length||p.id!==out[out.length-1].id);
-    out.push(choices[rnd(choices.length)]);
-  }
-  return out;
-}
-function zoneFor(id,style,allowed){if(style==='random'||!pref[id])return allowed[rnd(allowed.length)];let p=pref[id].filter(z=>allowed.includes(z));if(style==='realistic')return p[Math.min(rnd(5),p.length-1)];return Math.random()<.55?p[Math.min(rnd(6),p.length-1)]:allowed[rnd(allowed.length)]}
-function makeGroup(sel,count,opt){
-  let allowed=opt.ex5?[1,2,3,4,6,7,8,9]:[1,2,3,4,5,6,7,8,9];
-  for(let r=0;r<250;r++){
-    let seq=[];
-    for(let p of pitchOrder(sel,count,opt.bal,opt.avoidSamePitch)){
-      let z;
-      for(let t=0;t<50;t++){
-        z=zoneFor(p.id,opt.style,allowed);
-        const last=seq.length?seq[seq.length-1]:null;
-        if(!last || !opt.avoid || last.zone!==z)break;
-      }
-      seq.push({pitchId:p.id,pitchName:p.name,zone:z});
-    }
-    let min=Math.min(allowed.length,Math.max(3,Math.floor(count*.6)));
-    if(!opt.broad||new Set(seq.map(x=>x.zone)).size>=min)return seq;
-  }
-  return [];
-}
-function generate(){let sel=chosen(),gc=+$('groupCount').value,pc=+$('pitchCount').value;if(sel.length<2)return alert('Pilih minimal 2 pitch');let opt={bal:$('balanced').checked,avoidSamePitch:$('avoidSamePitch').checked,ex5:$('exclude5').checked,avoid:$('avoidRepeat').checked,broad:$('broadZones').checked,style:$('locationStyle').value},seen=new Set(),out=[],guard=0;while(out.length<gc&&guard<gc*500){guard++;let g=makeGroup(sel,pc,opt),s=g.map(x=>x.pitchId+':'+x.zone).join('|');if(g.length&&!seen.has(s)){seen.add(s);out.push(g)}}groups=out;save();renderGroups();tab('groups')}
-$('generate').onclick=generate;$('shuffleAgain').onclick=generate;
-function renderGroups(){$('summary').textContent=groups.length?groups.length+' grup tersimpan.':'Belum ada grup.';$('groupCards').innerHTML=groups.map((g,i)=>`<article class="group"><strong>Grup ${i+1}</strong><div class="chips">${g.slice(0,6).map(x=>`<span class="chip">${x.pitchName} · ${x.zone}</span>`).join('')}${g.length>6?`<span class="chip">+${g.length-6}</span>`:''}</div><div class="row"><button class="primary start" data-i="${i}">Mulai sesi</button><button class="danger del" data-i="${i}">Hapus</button></div></article>`).join('');document.querySelectorAll('.start').forEach(b=>b.onclick=()=>start(+b.dataset.i));document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{groups.splice(+b.dataset.i,1);save();renderGroups()})}
-$('zoneGrid').innerHTML=[1,2,3,4,5,6,7,8,9].map(z=>`<div class="zone" data-z="${z}">${z}</div>`).join('');
-function speak(){if(session.g===null)return;let x=groups[session.g][session.i],lang=$('voiceLang').value,u=new SpeechSynthesisUtterance(lang==='id-ID'?`${x.pitchName}, zona ${x.zone}`:`${x.pitchName}, zone ${x.zone}`);speechSynthesis.cancel();u.lang=lang;u.rate=.9;speechSynthesis.speak(u)}
-function renderSession(voice=true){
-  if(session.g===null||!groups[session.g]){
-    $('sessionEmpty').classList.remove('hidden');
-    $('sessionContent').classList.add('hidden');
-    return;
-  }
-  let g=groups[session.g],x=g[session.i];
-  $('sessionEmpty').classList.add('hidden');
-  $('sessionContent').classList.remove('hidden');
-  $('sessionGroup').textContent=`Grup ${session.g+1} dari ${groups.length}`;
-  $('sessionPitch').textContent=x.pitchName;
-  $('sessionZone').textContent='Zona '+x.zone;
-  $('sessionProgress').textContent=`Pitch ${session.i+1} dari ${g.length}`;
-  $('prevGroup').disabled=session.g===0;
-  $('nextGroup').disabled=session.g===groups.length-1;
-  document.querySelectorAll('.zone').forEach(z=>z.classList.toggle('active',+z.dataset.z===x.zone));
-  if(voice)setTimeout(speak,100);
-}
-function start(i){session={g:i,i:0};tab('session');renderSession()}
-function next(){
-  if(session.g===null)return;
-  let g=groups[session.g];
-  if(session.i<g.length-1){
-    session.i++;
-    renderSession();
-  }else{
-    alert('Grup selesai. Gunakan tombol Grup Selanjutnya untuk lanjut.');
-  }
-}
-function prev(){
-  if(session.g!==null&&session.i>0){
-    session.i--;
-    renderSession();
-  }
-}
-function nextGroup(){
-  if(session.g===null||session.g>=groups.length-1)return;
-  session.g++;
-  session.i=0;
-  renderSession();
-}
-function prevGroup(){
-  if(session.g===null||session.g<=0)return;
-  session.g--;
-  session.i=0;
-  renderSession();
-}
-$('nextPitch').onclick=next;
-$('prevPitch').onclick=prev;
-$('nextGroup').onclick=nextGroup;
-$('prevGroup').onclick=prevGroup;
-$('repeatVoice').onclick=speak;
-$('exitSession').onclick=()=>{speechSynthesis.cancel();session={g:null,i:0};renderSession(false);tab('groups')};
-document.addEventListener('keydown',e=>{if(!$('session').classList.contains('active')||session.g===null)return;if(e.code==='Space'||e.key==='ArrowRight'){e.preventDefault();next()}else if(e.key==='ArrowLeft'){e.preventDefault();prev()}else if(e.key.toLowerCase()==='r'){e.preventDefault();speak()}else if(e.key==='Escape')$('exitSession').click()});
-$('exportTxt').onclick=()=>{if(!groups.length)return alert('Belum ada grup');let t=groups.map((g,i)=>`GRUP ${i+1}\n`+g.map((x,j)=>`${j+1}. ${x.pitchName} | Zona ${x.zone}`).join('\n')).join('\n\n'),b=new Blob([t],{type:'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='pitch-sequences.txt';a.click()};
-try{
-  renderPitch();
-  renderGroups();
-  renderSession(false);
-  const status=$('runtimeStatus');
-  if(status){
-    status.textContent='Aplikasi aktif. Tombol dan tab siap digunakan.';
-    status.style.background='#13291d';
-    status.style.borderColor='#315c41';
-    status.style.color='#baf5c9';
-  }
-}catch(error){
-  const status=$('runtimeStatus');
-  if(status){
-    status.textContent='JavaScript gagal dimuat: '+error.message;
-    status.style.display='block';
-    status.style.background='#3a1d22';
-    status.style.borderColor='#78343e';
-    status.style.color='#ffc1c7';
-  }
-  console.error(error);
-}
-</script></body></html>
+(()=>{"use strict";const STORAGE_KEY="pitch-sequence-generator-v2",ALL_ZONES=[1,2,3,4,5,6,7,8,9];const clone=v=>JSON.parse(JSON.stringify(v));const DEFAULT_PITCHES=[
+{id:"four-seam",name:"Four-Seam",category:"Fastball",enabled:true,defaultZones:[1,2,3,4,5,6,7,8,9]},
+{id:"two-seam",name:"Two-Seam",category:"Fastball",enabled:false,defaultZones:[2,3,5,6,7,8,9]},
+{id:"cutter",name:"Cutter",category:"Fastball",enabled:false,defaultZones:[1,2,3,4,5,6,7,8,9]},
+{id:"sinker",name:"Sinker",category:"Fastball",enabled:false,defaultZones:[4,5,6,7,8,9]},
+{id:"slider",name:"Slider",category:"Breaking",enabled:true,defaultZones:[3,6,7,8,9]},
+{id:"sweeper",name:"Sweeper",category:"Breaking",enabled:false,defaultZones:[3,6,7,8,9]},
+{id:"curveball",name:"Curveball",category:"Breaking",enabled:true,defaultZones:[4,5,6,7,8,9]},
+{id:"knuckle-curve",name:"Knuckle Curve",category:"Breaking",enabled:false,defaultZones:[4,5,6,7,8,9]},
+{id:"slurve",name:"Slurve",category:"Breaking",enabled:false,defaultZones:[3,6,7,8,9]},
+{id:"screwball",name:"Screwball",category:"Breaking",enabled:false,defaultZones:[1,4,7,8]},
+{id:"changeup",name:"Changeup",category:"Off-speed",enabled:true,defaultZones:[4,5,6,7,8,9]},
+{id:"circle-change",name:"Circle Change",category:"Off-speed",enabled:false,defaultZones:[4,5,6,7,8,9]},
+{id:"splitter",name:"Splitter",category:"Off-speed",enabled:false,defaultZones:[4,5,6,7,8,9]},
+{id:"forkball",name:"Forkball",category:"Off-speed",enabled:false,defaultZones:[4,5,6,7,8,9]},
+{id:"vulcan-change",name:"Vulcan Change",category:"Off-speed",enabled:false,defaultZones:[4,5,6,7,8,9]},
+{id:"knuckleball",name:"Knuckleball",category:"Specialty",enabled:false,defaultZones:[1,2,3,4,5,6,7,8,9]},
+{id:"eephus",name:"Eephus",category:"Specialty",enabled:false,defaultZones:[1,2,3,4,5,6,7,8,9]}].map(p=>({...p,allowedZones:[...p.defaultZones],custom:false}));
+const normalize=z=>[...new Set((z||[]).map(Number).filter(n=>ALL_ZONES.includes(n)))].sort((a,b)=>a-b);const defaults=()=>({config:{batterCount:9,pitchMode:"fixed",fixedPitchCount:5,randomPitchMin:4,randomPitchMax:6,globalZones:[1,3,7,9],voiceEnabled:true,pitches:clone(DEFAULT_PITCHES)},session:{sequences:[],batterIndex:0,pitchIndex:0}});const safeGet=()=>{try{return localStorage.getItem(STORAGE_KEY)}catch{return null}},safeSet=v=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(v))}catch{}};function merge(saved=[]){const map=new Map(saved.map(p=>[p.id,p]));const built=DEFAULT_PITCHES.map(b=>{const s=map.get(b.id);return s?{...b,...s,defaultZones:[...b.defaultZones],allowedZones:normalize(s.allowedZones||b.defaultZones),custom:false}:clone(b)});return [...built,...saved.filter(p=>p.custom&&!DEFAULT_PITCHES.some(b=>b.id===p.id)).map(p=>({...p,category:"Custom",enabled:!!p.enabled,defaultZones:normalize(p.defaultZones||ALL_ZONES),allowedZones:normalize(p.allowedZones||p.defaultZones||ALL_ZONES),custom:true}))]}
+function load(){const f=defaults(),raw=safeGet();if(!raw)return f;try{const s=JSON.parse(raw);return{config:{...f.config,...(s.config||{}),pitches:merge(s?.config?.pitches),globalZones:normalize(s?.config?.globalZones||f.config.globalZones)},session:{sequences:Array.isArray(s?.session?.sequences)?s.session.sequences:[],batterIndex:0,pitchIndex:0}}}catch{return f}}let state=load(),currentScreen="setup";const el=id=>document.getElementById(id),esc=t=>String(t).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"),save=()=>safeSet(state),clamp=(v,min,max,f)=>{const n=parseInt(v,10);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):f};
+function renderControls(){el("batterCount").value=state.config.batterCount;el("fixedPitchCount").value=state.config.fixedPitchCount;el("randomPitchMin").value=state.config.randomPitchMin;el("randomPitchMax").value=state.config.randomPitchMax;el("voiceEnabled").checked=state.config.voiceEnabled;document.querySelectorAll('input[name="pitchMode"]').forEach(r=>r.checked=r.value===state.config.pitchMode);const random=state.config.pitchMode==="random";el("fixedPitchField").classList.toggle("hidden",random);el("randomPitchFields").classList.toggle("hidden",!random)}
+function renderGlobal(){el("globalZones").innerHTML=ALL_ZONES.map(z=>`<label class="zone-option"><input type="checkbox" data-global-zone="${z}" ${state.config.globalZones.includes(z)?"checked":""}><span>${z}</span></label>`).join("")}
+function pitchCard(p){return `<div class="pitch-card ${p.enabled?"":"disabled"}"><div class="pitch-title-row"><label class="pitch-toggle"><input type="checkbox" data-pitch-enabled="${esc(p.id)}" ${p.enabled?"checked":""}><span>${esc(p.name)}</span></label><div><button class="mini-btn" data-reset-pitch="${esc(p.id)}" type="button">Reset</button>${p.custom?`<button class="mini-btn" data-delete-pitch="${esc(p.id)}" type="button" style="color:var(--danger)">Hapus</button>`:""}</div></div><div class="allowed-label">Allowed zone</div><div class="mini-zones">${ALL_ZONES.map(z=>`<label class="mini-zone"><input type="checkbox" data-pitch-zone="${esc(p.id)}" value="${z}" ${p.allowedZones.includes(z)?"checked":""}><span>${z}</span></label>`).join("")}</div></div>`}
+function renderLibrary(){const order=["Fastball","Breaking","Off-speed","Specialty","Custom"];el("pitchLibrary").innerHTML=order.map(c=>[c,state.config.pitches.filter(p=>p.category===c)]).filter(([,p])=>p.length).map(([c,p],i)=>`<details class="category" ${i<3?"open":""}><summary>${esc(c)} <span>${p.length} pitch</span></summary><div class="pitch-list">${p.map(pitchCard).join("")}</div></details>`).join("")}
+function renderZoneGrid(){el("sessionZoneGrid").innerHTML=ALL_ZONES.map(z=>`<div class="session-zone-cell" data-session-zone="${z}"><span>${z}</span></div>`).join("")}
+function renderResult(){const s=state.session.sequences;if(!s.length){el("resultList").innerHTML='<p class="helper">Belum ada sequence. Buat session terlebih dahulu.</p>';return}el("resultList").innerHTML=s.map((seq,bi)=>`<article class="result-card"><div class="result-head"><h3 style="margin:0">Batter ${bi+1}</h3><button class="btn btn-soft" type="button" data-regenerate-batter="${bi}">Regenerate</button></div><div class="sequence">${seq.map((it,pi)=>`<div class="sequence-item"><span class="sequence-index">${pi+1}</span><span class="sequence-pitch">${esc(it.pitchName)}</span><span class="sequence-zone">${it.zone}</span></div>`).join("")}</div></article>`).join("")}
+function readInputs(){state.config.batterCount=clamp(el("batterCount").value,1,50,9);state.config.fixedPitchCount=clamp(el("fixedPitchCount").value,1,30,5);state.config.randomPitchMin=clamp(el("randomPitchMin").value,1,30,4);state.config.randomPitchMax=clamp(el("randomPitchMax").value,1,30,6);state.config.pitchMode=document.querySelector('input[name="pitchMode"]:checked')?.value||"fixed";state.config.voiceEnabled=el("voiceEnabled").checked}
+function pool(){const g=new Set(state.config.globalZones);return state.config.pitches.filter(p=>p.enabled).map(p=>({...p,validZones:p.allowedZones.filter(z=>g.has(z))})).filter(p=>p.validZones.length)}
+function validate(){readInputs();const e=[];if(state.config.pitchMode==="random"&&state.config.randomPitchMin>state.config.randomPitchMax)e.push("Minimum pitch tidak boleh lebih besar daripada maksimum.");if(!state.config.globalZones.length)e.push("Pilih minimal satu Global Zone.");const enabled=state.config.pitches.filter(p=>p.enabled);if(enabled.length<2)e.push("Aktifkan minimal dua jenis pitch agar pitch tidak berulang.");for(const p of enabled){if(!p.allowedZones.length)e.push(`${p.name} tidak memiliki Allowed Zone.`);else if(!p.allowedZones.some(z=>state.config.globalZones.includes(z)))e.push(`${p.name} tidak memiliki zona yang cocok dengan Global Zone.`)}const valid=pool();if(valid.length<2)e.push("Minimal dua pitch aktif harus memiliki zona valid.");const zones=new Set(valid.flatMap(p=>p.validZones)),max=state.config.pitchMode==="fixed"?state.config.fixedPitchCount:state.config.randomPitchMax;if(max>1&&zones.size<2)e.push("Minimal dua zona valid diperlukan agar zona tidak berulang.");return [...new Set(e)]}
+const shuffle=a=>{const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c};function generateSeq(len){const p=pool(),out=[];function back(i){if(i>=len)return true;const prev=out[i-1];for(const pitch of shuffle(p.filter(x=>!prev||x.id!==prev.pitchId))){for(const z of shuffle(pitch.validZones.filter(x=>!prev||x!==prev.zone))){out.push({pitchId:pitch.id,pitchName:pitch.name,zone:z});if(back(i+1))return true;out.pop()}}return false}return back(0)?out:null}function count(){if(state.config.pitchMode==="fixed")return state.config.fixedPitchCount;const {randomPitchMin:min,randomPitchMax:max}=state.config;return Math.floor(Math.random()*(max-min+1))+min}
+function message(type,msgs,target="setup"){const err=target==="result"?el("resultError"):el("setupError"),ok=el("setupSuccess");err.classList.remove("show");ok.classList.remove("show");if(!msgs?.length)return;const h=msgs.map(m=>`<div>• ${esc(m)}</div>`).join("");if(type==="error"){err.innerHTML=h;err.classList.add("show");err.scrollIntoView({behavior:"smooth",block:"center"})}else{ok.innerHTML=h;ok.classList.add("show")}}
+function generateAll(){const errors=validate();if(errors.length)return message("error",errors);const seq=[];for(let i=0;i<state.config.batterCount;i++){const s=generateSeq(count());if(!s)return message("error",["Kombinasi tidak dapat dibuat. Tambahkan pitch atau zona valid."]);seq.push(s)}state.session={sequences:seq,batterIndex:0,pitchIndex:0};save();renderResult();show("session");updateSession(true)}
+function regenerate(i){const errors=validate();if(errors.length)return message("error",errors,"result");const s=generateSeq(state.config.pitchMode==="random"?count():state.session.sequences[i].length);if(!s)return message("error",["Batter tidak dapat di-regenerate."],"result");state.session.sequences[i]=s;save();renderResult();updateSession(false)}
+function show(name){currentScreen=name;document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));el(name+"Screen").classList.add("active");el("resultNavBtn").disabled=!state.session.sequences.length;window.scrollTo({top:0,behavior:"smooth"})}
+function current(){return state.session.sequences[state.session.batterIndex]?.[state.session.pitchIndex]||null}function speak(){if(!state.config.voiceEnabled||!("speechSynthesis" in window))return;const i=current();if(!i)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(`${i.pitchName}, zone ${i.zone}`);u.lang="en-US";u.rate=.9;speechSynthesis.speak(u)}
+function updateSession(announce=true){if(!state.session.sequences.length)return;state.session.batterIndex=Math.max(0,Math.min(state.session.batterIndex,state.session.sequences.length-1));const seq=state.session.sequences[state.session.batterIndex];state.session.pitchIndex=Math.max(0,Math.min(state.session.pitchIndex,seq.length-1));const i=current();el("batterMeta").textContent=`Batter ${state.session.batterIndex+1} / ${state.session.sequences.length}`;el("pitchMeta").textContent=`Pitch ${state.session.pitchIndex+1} / ${seq.length}`;el("sessionPitchName").textContent=i.pitchName;el("sessionZoneNumber").textContent=i.zone;document.querySelectorAll("[data-session-zone]").forEach(c=>c.classList.toggle("active",+c.dataset.sessionZone===i.zone));const before=state.session.sequences.slice(0,state.session.batterIndex).reduce((a,s)=>a+s.length,0),total=state.session.sequences.reduce((a,s)=>a+s.length,0),pct=Math.round((before+state.session.pitchIndex+1)/total*100);el("sessionProgress").style.width=pct+"%";el("progressLabel").textContent=pct+"% selesai";el("prevPitchBtn").disabled=state.session.pitchIndex===0;el("nextPitchBtn").disabled=state.session.pitchIndex===seq.length-1;el("prevBatterBtn").disabled=state.session.batterIndex===0;el("nextBatterBtn").disabled=state.session.batterIndex===state.session.sequences.length-1;save();if(announce)speak()}
+function movePitch(d){const s=state.session.sequences[state.session.batterIndex],n=state.session.pitchIndex+d;if(n<0||n>=s.length)return;state.session.pitchIndex=n;updateSession(true)}function moveBatter(d){const n=state.session.batterIndex+d;if(n<0||n>=state.session.sequences.length)return;state.session.batterIndex=n;state.session.pitchIndex=0;updateSession(true)}
+function resetAll(){const customs=state.config.pitches.filter(p=>p.custom).map(p=>({...p,allowedZones:[...p.defaultZones]}));state.config.pitches=[...clone(DEFAULT_PITCHES),...customs];save();renderLibrary();message("success",["Semua pitch dikembalikan ke zona default."])}function addCustom(){const inp=el("customPitchName"),name=inp.value.trim();if(!name)return message("error",["Masukkan nama custom pitch."]);if(state.config.pitches.some(p=>p.name.toLowerCase()===name.toLowerCase()))return message("error",["Nama pitch tersebut sudah ada."]);let base=name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"custom-pitch",id=base,n=2;while(state.config.pitches.some(p=>p.id===id))id=`${base}-${n++}`;state.config.pitches.push({id,name,category:"Custom",enabled:true,defaultZones:[...ALL_ZONES],allowedZones:[...ALL_ZONES],custom:true});inp.value="";save();renderLibrary();message("success",[`${name} berhasil ditambahkan.`])}
+["batterCount","fixedPitchCount","randomPitchMin","randomPitchMax"].forEach(id=>el(id).addEventListener("change",()=>{readInputs();renderControls();save()}));document.querySelectorAll('input[name="pitchMode"]').forEach(r=>r.addEventListener("change",()=>{state.config.pitchMode=r.value;renderControls();save()}));el("voiceEnabled").addEventListener("change",e=>{state.config.voiceEnabled=e.target.checked;save()});el("globalZones").addEventListener("change",e=>{const i=e.target.closest("[data-global-zone]");if(!i)return;const z=+i.dataset.globalZone;state.config.globalZones=i.checked?normalize([...state.config.globalZones,z]):state.config.globalZones.filter(x=>x!==z);save()});el("pitchLibrary").addEventListener("change",e=>{const en=e.target.closest("[data-pitch-enabled]");if(en){const p=state.config.pitches.find(p=>p.id===en.dataset.pitchEnabled);if(p)p.enabled=en.checked;save();renderLibrary();return}const zi=e.target.closest("[data-pitch-zone]");if(zi){const p=state.config.pitches.find(p=>p.id===zi.dataset.pitchZone),z=+zi.value;if(p)p.allowedZones=zi.checked?normalize([...p.allowedZones,z]):p.allowedZones.filter(x=>x!==z);save()}});el("pitchLibrary").addEventListener("click",e=>{const r=e.target.closest("[data-reset-pitch]");if(r){const p=state.config.pitches.find(p=>p.id===r.dataset.resetPitch);if(p)p.allowedZones=[...p.defaultZones];save();renderLibrary();return}const d=e.target.closest("[data-delete-pitch]");if(d){state.config.pitches=state.config.pitches.filter(p=>p.id!==d.dataset.deletePitch);save();renderLibrary()}});el("resultList").addEventListener("click",e=>{const b=e.target.closest("[data-regenerate-batter]");if(b)regenerate(+b.dataset.regenerateBatter)});
+el("generateBtn").onclick=generateAll;el("addCustomPitchBtn").onclick=addCustom;el("customPitchName").addEventListener("keydown",e=>{if(e.key==="Enter")addCustom()});el("resetAllPitchesBtn").onclick=resetAll;el("setupNavBtn").onclick=()=>show("setup");el("resultNavBtn").onclick=()=>{renderResult();show("result")};el("prevPitchBtn").onclick=()=>movePitch(-1);el("nextPitchBtn").onclick=()=>movePitch(1);el("prevBatterBtn").onclick=()=>moveBatter(-1);el("nextBatterBtn").onclick=()=>moveBatter(1);el("speakBtn").onclick=speak;el("finishSessionBtn").onclick=()=>{renderResult();show("result")};el("restartSessionBtn").onclick=()=>{state.session.batterIndex=0;state.session.pitchIndex=0;show("session");updateSession(true)};el("regenerateAllBtn").onclick=generateAll;document.addEventListener("keydown",e=>{if(currentScreen!=="session"||e.target.matches("input,textarea"))return;if(e.code==="Space"||e.key==="ArrowRight"){e.preventDefault();const s=state.session.sequences[state.session.batterIndex];state.session.pitchIndex<s.length-1?movePitch(1):moveBatter(1)}else if(e.key==="ArrowLeft"){e.preventDefault();movePitch(-1)}else if(e.key==="ArrowUp"){e.preventDefault();moveBatter(-1)}else if(e.key==="ArrowDown"){e.preventDefault();moveBatter(1)}});
+renderControls();renderGlobal();renderLibrary();renderZoneGrid();renderResult();updateSession(false);el("resultNavBtn").disabled=!state.session.sequences.length;
+})();
+</script>
+</body>
+</html>
